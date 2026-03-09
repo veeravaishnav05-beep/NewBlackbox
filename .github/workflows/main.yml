@@ -1,0 +1,49 @@
+name: Build BlackBox AAR
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Install NDK
+        run: sdkmanager "ndk;26.1.10909125"
+
+      - name: Install CMake
+        run: sdkmanager "cmake;3.22.1"
+
+      - name: Grant Gradle Permission
+        run: chmod +x gradlew
+
+      - name: Build Bcore AAR
+        run: ./gradlew :Bcore:assembleRelease
+
+      - name: Build Reflection AAR
+        run: ./gradlew :black-reflection:assembleRelease
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: blackbox-aar
+          path: |
+            Bcore/build/outputs/aar/*.aar
+            black-reflection/build/outputs/aar/*.aar
