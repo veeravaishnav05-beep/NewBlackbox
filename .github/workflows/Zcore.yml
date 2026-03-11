@@ -17,18 +17,30 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Licenses and Install SDK Components
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "ndk;29.0.13846066"
 
       - name: Rename BlackBox Package
         run: |
-          grep -rl "top.niunaijun.blackbox" . | xargs sed -i 's/top.niunaijun.blackbox/zcore/g'
+          grep -rl "top.niunaijun.blackbox" . | xargs sed -i 's/top.niunaijun.blackbox/zcore/g' || true
 
       - name: Grant Permission
         run: chmod +x gradlew
 
       - name: Build AAR
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -39,6 +51,10 @@ jobs:
       - name: Send AAR to Telegram
         run: |
           FILE=$(find . -name "*.aar" | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "No AAR file found!"
+            exit 1
+          fi
           curl -F document=@"$FILE" \
-          https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument \
-          -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }}
+            -F chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendDocument"
