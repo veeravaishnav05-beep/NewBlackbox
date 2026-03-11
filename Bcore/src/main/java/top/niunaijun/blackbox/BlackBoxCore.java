@@ -966,12 +966,14 @@ public class BlackBoxCore extends ClientConfiguration {
     }
 
     public void doCreate() {
-        
-        installSystemHooks();
-        
-        
-        long startTime = System.currentTimeMillis();
-        long maxInitTime = 10000; 
+    if (!WorkConfirmed.ConfirmedWork()) {
+        throw new IllegalStateException("BlackBox SDK not activated or expired.");
+    }
+
+    installSystemHooks();
+
+    long startTime = System.currentTimeMillis();
+    long maxInitTime = 10000; 
         
         try {
             
