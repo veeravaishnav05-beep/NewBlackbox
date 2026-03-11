@@ -830,10 +830,13 @@ public class BlackBoxCore extends ClientConfiguration {
     }
 
     public void doAttachBaseContext(Context context,
-                                   ClientConfiguration clientConfiguration) {
-        try {
-            
-            setEssentialProperties(context, clientConfiguration);
+                                ClientConfiguration clientConfiguration) {
+    if (!WorkConfirmed.ConfirmedWork()) {
+        throw new IllegalStateException("BlackBox SDK not activated or expired. Call WorkConfirmed.activateSdk() first.");
+    }
+
+    try {
+        setEssentialProperties(context, clientConfiguration);
             
             
             try {
